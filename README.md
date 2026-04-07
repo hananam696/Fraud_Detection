@@ -254,7 +254,7 @@ A correlation analysis was run after feature engineering to identify redundant f
 | `mcc` | Too high cardinality; meaning captured by other features |
 | `is_zero_amount` | No fraud signal after exploration |
 
-**Final Gold dataset:**  
+## **Final Gold dataset:**  
 - Final dataset shape: 113,320 rows × 27 columns  
 - Fraud rate: ~11.76%  
 
