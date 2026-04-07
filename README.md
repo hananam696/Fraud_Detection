@@ -19,7 +19,7 @@ Data Collection (Kaggle) → Data Understanding & Initial EDA → Data Cleaning 
 
 1. Install dependencies using:
 pip install -r requirements.txt
-Refer: requirements.txt for the dependencies used.
+Refer: Requirements.txt for the dependencies used.
 
 3. Download the dataset using the Kaggle API  
 
