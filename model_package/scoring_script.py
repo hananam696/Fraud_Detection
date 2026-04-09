@@ -3,7 +3,7 @@ import pickle
 import joblib
 
 # Load artifacts
-model = joblib.load("model_package/fraud_model.pkl")
+model = joblib.load("model_package/fraud_automl_model.pkl")
 
 with open("model_package/columns.pkl", "rb") as f:
     features = pickle.load(f)
