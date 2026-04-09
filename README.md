@@ -396,11 +396,12 @@ Recall gap < 0.05 → **No significant bias detected.**
 
 | Age Group | Recall |
 |---|---|
-| 18–25 | Measured |
-| 26–35 | Measured |
-| 36–50 | Measured |
-| 51–65 | Measured |
-| 65+ | Measured (small sample — interpret cautiously) |
+| 18–25 | 1.000 |
+| 26–35 | 0.919​ |
+| 36–50 | 0.929 |
+| 51–65 | 0.948​ |
+| 65+ | 0.952​ |
+
 
 No strong bias was observed across age groups. Some groups have small sample sizes, making their recall estimates less reliable.
 
