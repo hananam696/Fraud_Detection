@@ -450,7 +450,7 @@ View Dashboard: https://app.powerbi.com/reportEmbed?reportId=ea85ce31-d657-4129-
 ## Presentation
 
 An overview presentation covering the full project pipeline, methodology, results, and insights.
-Refer: `presentation/fraud_detection_presentation.pptx`
+Refer: `presentation/fraud_detection.pptx`
 
 ## Final Results
 
