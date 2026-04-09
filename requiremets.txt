@@ -8,4 +8,5 @@ xgboost
 flaml
 shap
 joblib
+pickle
 kaggle
