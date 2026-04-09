@@ -13,7 +13,7 @@ This project implements an end-to-end fraud detection system using machine learn
 ---
 ## Project Pipeline
 
-Data Collection (Kaggle) → Data Understanding & Initial EDA → Data Cleaning & Merging + EDA with target (feature–target relationships) → Feature Engineering → Train-Test Split → Encoding → Model Training → Model Evaluation → SHAP Explainability → Bias & Fairness Analysis → Deployment (Model Packaging + Scoring Script) → Power BI Dashboard
+Identifying the problem -> Data Collection (Kaggle) → Data Understanding & Initial EDA → Data Cleaning & Merging + EDA with target (feature–target relationships) → Feature Engineering → Train-Test Split → Encoding → Model Training → Model Evaluation → SHAP Explainability → Bias & Fairness Analysis → Deployment (Model Packaging + Scoring Script) → Power BI Dashboard
 
 ## How to Run
 
@@ -254,20 +254,20 @@ A correlation analysis was run after feature engineering to identify redundant f
 | `days_until_expiry` | Captured via `is_expired_card` |
 | `mcc` | Too high cardinality; meaning captured by other features |
 | `is_zero_amount` | No fraud signal after exploration |
-
+|`year` | Temporal identifier — not a meaningful fraud signal; model should generalise across years |
 ## **Final Gold dataset:**  
 - Final dataset shape: 113,320 rows × 27 columns  
 - Fraud rate: ~11.76%  
 
 The final features used for modeling include:
 - Transaction features:  
-  amount, use_chip, merchant_state, is_refund, is_zero_amount  
+  amount, use_chip, merchant_state, is_refund  
 - Card features:  
   card_brand, card_type, has_chip, num_cards_issued, credit_limit  
 - Customer features:  
   current_age, gender, yearly_income, credit_score, num_credit_cards  
 - Time-based features:  
-  hour, year, month, day_of_week, is_night  
+  hour, month, day_of_week, is_night  
 - Account features:  
   account_age_days, is_expired_card  
 - Financial ratio features:  
@@ -299,7 +299,7 @@ The gold dataset was split using **stratified random 80/20 split**.
 
 ### Encoding
 
-Categorical columns were encoded using `LabelEncoder` fitted only on training data. The test set was mapped using the fitted encoder (unseen categories → `-1`) to prevent data leakage.
+Categorical columns were encoded using `Ordinal Encoder` fitted only on training data. The test set was mapped using the fitted encoder (unseen categories → `-1`) to prevent data leakage.
 
 Columns encoded: `use_chip`, `merchant_state`, `card_brand`, `card_type`, `gender`, `age_group`
 
@@ -325,24 +325,24 @@ Even after sampling, the fraud rate is ~11.76%. Tree-based models used `scale_po
 
 **AutoML — FLAML**
 - 120-second budget, `metric='roc_auc'`, `task='classification'`
-- Automatically selected LightGBM as the best estimator
+- Automatically selected XGBoost as the best estimator
 
 ---
 
 ### Model Comparison
 
-| Model | AUC-ROC | F1 (Fraud) |
-|---|---|---|
-| Logistic Regression | ~0.70 | Low |
-| Random Forest | High | High |
-| LightGBM | Very High | High |
-| **AutoML (LightGBM)** | **~0.997** | **Best** |
+| Model | AUC-ROC | Precision (Fraud) | Recall (Fraud) | F1 (Fraud) |
+|---|---|---|---|---|
+| Logistic Regression | 0.6983 | 0.21 | 0.55 | 0.30 |
+| Random Forest | 0.9568 | 0.55 | 0.90 | 0.68 |
+| LightGBM | 0.9766 | 0.62 | 0.92 | 0.74 |
+| **AutoML (XGBoost)** | **0.9896** | **0.91** | **0.89** | **0.89** |
 
-**AutoML (LightGBM)** was selected as the final model.
+**AutoML (XGBoost)** was selected as the final model as it achieved the highest AUC-ROC (0.9896) and best F1 score (0.89), offering a strong balance between precision and recall. While LightGBM achieved slightly higher raw recall (0.92), its precision was significantly lower (0.62), leading to excessive false positives. After threshold tuning to 0.3, AutoML recall reached 0.89 — only marginally below LightGBM — with much stronger overall performance across all metrics.
 
 ### Threshold Tuning
 
-The default decision threshold of 0.5 was lowered to **0.3** to prioritize recall (catching more fraud) at the cost of some precision. In fraud detection, missing a fraudulent transaction (false negative) is far more costly than a false alarm.
+The default decision threshold of 0.5 was lowered to 0.3 to prioritize recall (catching more fraud) at the cost of some precision. This increased fraud recall to ~0.89. In fraud detection, missing a fraudulent transaction (false negative) is far more costly than a false alarm.
 
 ### Overfitting Check
 
@@ -362,14 +362,13 @@ SHAP (SHapley Additive exPlanations) was applied to the AutoML model using `Tree
 
 | Rank | Feature | Insight |
 |---|---|---|
-| 1 | `year` | Fraud patterns have shifted significantly across 2010–2019 |
-| 2 | `merchant_state` | Geographic location is a strong fraud signal |
-| 3 | `hour` | Time of day heavily influences fraud probability |
-| 4 | `amount` | Larger transactions carry higher fraud risk |
-| 5 | `amount_to_limit_ratio` | Spending close to credit limit is suspicious |
-| 6 | `amount_to_income_ratio` | Disproportionate amounts relative to income signal fraud |
-| 7 | `account_age_days` | Newer accounts are riskier |
-| 8 | `use_chip` | Transaction method (online vs. chip vs. swipe) matters |
+| 1 | `merchant_state` | Geographic location is a strong fraud signal |
+| 2 | `hour` | Time of day heavily influences fraud probability |
+| 3 | `amount` | Larger transactions carry higher fraud risk |
+| 4 | `amount_to_limit_ratio` | Spending close to credit limit is suspicious |
+| 5 | `amount_to_income_ratio` | Disproportionate amounts relative to income signal fraud |
+| 6 | `account_age_days` | Newer accounts are riskier |
+| 7 | `use_chip` | Transaction method (online vs. chip vs. swipe) matters |
 
 Three levels of SHAP analysis were produced:
 - **Summary plot** — overall feature importance ranked by mean |SHAP|, with direction
@@ -387,8 +386,8 @@ Recall was used as the fairness metric — it measures whether the model detects
 
 | Group | Recall |
 |---|---|
-| Male | ~0.93 |
-| Female | ~0.91 |
+| Male | 0.8859 |
+| Female |0.8946 |
 
 Recall gap < 0.05 → **No significant bias detected.**
 
@@ -396,11 +395,11 @@ Recall gap < 0.05 → **No significant bias detected.**
 
 | Age Group | Recall |
 |---|---|
-| 18–25 | 1.000 |
-| 26–35 | 0.919​ |
-| 36–50 | 0.929 |
-| 51–65 | 0.948​ |
-| 65+ | 0.952​ |
+| 18–25 | 0.9000 |
+| 26–35 | 0.8476|
+| 36–50 | 0.8743 |
+| 51–65 | 0.9027 |
+| 65+ | 0.9060​ |
 
 
 No strong bias was observed across age groups. Some groups have small sample sizes, making their recall estimates less reliable.
@@ -418,10 +417,10 @@ The trained AutoML model was packaged with all required artifacts for real-world
 
 | Artifact | File | Description |
 |---|---|---|
-| Trained model | `fraud_model.pkl` | Serialized AutoML (LightGBM) model |
-| Feature list | `feature_names.pkl` | Ordered list of features used at training |
+| Trained model | `fraud_model.pkl` | Serialized AutoML (XGBoost) model |
+| Feature list | `columns.pkl` | Ordered list of features used at training |
 | Decision threshold | `threshold.pkl` | Tuned threshold (0.3) |
-| Encoders | `encoders.pkl` | Fitted LabelEncoders for categorical columns |
+| Encoders | `encoder.pkl` | Fitted OrdinalEncoders for categorical columns |
 | Scoring script | `scoring_script.py` | End-to-end prediction function |
 
 **Scoring Script** (`scoring_script.py`) takes a raw transaction DataFrame, applies the same preprocessing and encoding as training, and returns:
@@ -450,18 +449,26 @@ View Dashboard: https://app.powerbi.com/reportEmbed?reportId=ea85ce31-d657-4129-
 
 ## Final Results
 
-- Best Model: AutoML (LightGBM)  
+- Best Model: AutoML (XGBoost) with tuned threshold (0.3)
 
-- Recall (Fraud - Class 1): ~0.93  
-- Recall (Legitimate - Class 0): ~0.99  
+- AUC-ROC: 0.9896
 
-- F1 Score (Fraud): ~0.93  
-- AUC-ROC: ~0.997  
+- Class 0 (Legitimate):
+  - Precision: 0.99
+  - Recall: 0.99
+  - F1 Score: 0.99
 
-- Model prioritizes recall to minimize missed fraud cases (false negatives), which is critical in fraud detection  
+- Class 1 (Fraud):
+  - Precision: 0.89
+  - Recall: 0.89
+  - F1 Score: 0.89
+
+- Overall Accuracy: 0.97
+
+- Model prioritizes recall to minimize missed fraud cases (false negatives), which is critical in fraud detection
+- Both classes achieve strong precision and recall, confirming the model performs well across legitimate and fraudulent transactions
 
 - SHAP explainability identified key features influencing predictions:
-  - year  
   - merchant_state  
   - hour  
   - amount  
