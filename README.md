@@ -447,6 +447,11 @@ The dashboard includes:
 
 View Dashboard: https://app.powerbi.com/reportEmbed?reportId=ea85ce31-d657-4129-97fe-17518305b9b1&autoAuth=true&ctid=b30f4b44-46c6-4070-9997-f87b38d4771c&actionBarEnabled=true&reportCopilotInEmbed=true 
 
+## Presentation
+
+An overview presentation covering the full project pipeline, methodology, results, and insights.
+Refer: `presentation/fraud_detection_presentation.pptx`
+
 ## Final Results
 
 - Best Model: AutoML (XGBoost) with tuned threshold (0.3)
